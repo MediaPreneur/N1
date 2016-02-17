@@ -1,4 +1,4 @@
-import {ComponentRegistry, DatabaseStore, Thread, ExtensionRegistry, ComposerExtension, React, Actions, QuotedHTMLTransformer} from 'nylas-exports';
+import {ComponentRegistry, DatabaseStore, Thread, Message, ExtensionRegistry, ComposerExtension, React, Actions, QuotedHTMLTransformer} from 'nylas-exports';
 import LinkTrackingButton from './link-tracking-button';
 import LinkTrackingIcon from './link-tracking-message-icon';
 import LinkTrackingPanel from './link-tracking-panel';
@@ -17,39 +17,42 @@ class DraftBody {
   get body() {return this._body}
 }
 
-function afterDraftSend({message}) {
+function afterDraftSend({draftClientId}) {
   //only run this handler in the main window
   if(!NylasEnv.isMainWindow()) return;
 
-  //grab message metadata, if any
-  const metadata = message.metadataForPluginId(PLUGIN_ID);
+  //query for the message
+  DatabaseStore.findBy(Message, {clientId: draftClientId}).then((message) => {
+    //grab message metadata, if any
+    const metadata = message.metadataForPluginId(PLUGIN_ID);
 
-  //get the uid from the metadata, if present
-  if(metadata){
-    let uid = metadata.uid;
+    //get the uid from the metadata, if present
+    if(metadata){
+      let uid = metadata.uid;
 
-    //update metadata against the message
-    for(const linkId of Object.keys(metadata.links)) {
-      metadata.links[linkId].click_count = 0;
-      metadata.links[linkId].click_data = [];
+      //update metadata against the message
+      for(const linkId of Object.keys(metadata.links)) {
+        metadata.links[linkId].click_count = 0;
+        metadata.links[linkId].click_data = [];
+      }
+      Actions.setMetadata(message, PLUGIN_ID, metadata);
+
+      //post the uid and message id pair to the plugin server
+      let data = {uid: uid, message_id:message.id};
+      let serverUrl = `http://${PLUGIN_URL}/register-message`;
+      return post({
+        url: serverUrl,
+        body: JSON.stringify(data)
+      }).then(args => {
+        if(args[0].statusCode != 200)
+          throw new Error();
+        return args[1];
+      }).catch(error => {
+        NylasEnv.showErrorDialog("There was a problem contacting the Link Tracking server! This message will not have link tracking");
+        Promise.reject(error);
+      });
     }
-    Actions.setMetadata(message, PLUGIN_ID, metadata);
-
-    //post the uid and message id pair to the plugin server
-    let data = {uid: uid, message_id:message.id};
-    let serverUrl = `http://${PLUGIN_URL}/register-message`;
-    return post({
-      url: serverUrl,
-      body: JSON.stringify(data)
-    }).then(args => {
-      if(args[0].statusCode != 200)
-        throw new Error();
-      return args[1];
-    }).catch(error => {
-      NylasEnv.showErrorDialog("There was a problem contacting the Link Tracking server! This message will not have link tracking");
-      Promise.reject(error);
-    });
-  }
+  });
 }
 
 class LinkTrackingComposerExtension extends ComposerExtension {

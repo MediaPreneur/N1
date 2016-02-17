@@ -18,7 +18,7 @@ export default class LinkTrackingIcon extends React.Component {
   _getStateFromThread(thread){
     let metadatas = thread.metadata.map(m=>m.metadataForPluginId(plugin.appId)).filter(m=>m);
     if(metadatas.length) {
-      const msgClickMax = (m) => Math.max(...Object.keys(m.links).map(id=>m.links[id].click_count||0));
+      const msgClickMax = (m) => m.links ? Math.max(...Object.keys(m.links).map(id=>m.links[id].click_count||0)) : 0;
       return {clicks: Math.max(...metadatas.map(msgClickMax))};
     }
     else

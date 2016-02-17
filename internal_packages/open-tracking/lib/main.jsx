@@ -1,4 +1,4 @@
-import {ComponentRegistry, ExtensionRegistry, DatabaseStore, Thread, ComposerExtension, React, Actions, QuotedHTMLTransformer} from 'nylas-exports';
+import {ComponentRegistry, ExtensionRegistry, DatabaseStore, Message, Thread, ComposerExtension, React, Actions, QuotedHTMLTransformer} from 'nylas-exports';
 import OpenTrackingButton from './open-tracking-button';
 import OpenTrackingIcon from './open-tracking-message-icon';
 import plugin from '../package.json'
@@ -16,35 +16,38 @@ class DraftBody {
   get body() {return this._body}
 }
 
-function afterDraftSend({message}) {
+function afterDraftSend({draftClientId}) {
   //only run this handler in the main window
   if(!NylasEnv.isMainWindow()) return;
 
-  //grab message metadata, if any
-  const metadata = message.metadataForPluginId(PLUGIN_ID);
+  //query for the message
+  DatabaseStore.findBy(Message, {clientId: draftClientId}).then((message) => {
+    //grab message metadata, if any
+    const metadata = message.metadataForPluginId(PLUGIN_ID);
 
-  //get the uid from the metadata, if present
-  if(metadata){
-    let uid = metadata.uid;
+    //get the uid from the metadata, if present
+    if(metadata){
+      let uid = metadata.uid;
 
-    //set metadata against the message
-    Actions.setMetadata(message, PLUGIN_ID, {open_count: 0, open_data: []});
+      //set metadata against the message
+      Actions.setMetadata(message, PLUGIN_ID, {open_count: 0, open_data: []});
 
-    //post the uid and message id pair to the plugin server
-    let data = {uid: uid, message_id:message.id, thread_id:1};
-    let serverUrl = `http://${PLUGIN_URL}/register-message`;
-    return post({
-      url: serverUrl,
-      body: JSON.stringify(data)
-    }).then(args => {
-      if(args[0].statusCode != 200)
-        throw new Error();
-      return args[1];
-    }).catch(error => {
-      NylasEnv.showErrorDialog("There was a problem contacting the Open Tracking server! This message will not have open tracking :(");
-      Promise.reject(error);
-    });
-  }
+      //post the uid and message id pair to the plugin server
+      let data = {uid: uid, message_id:message.id, thread_id:1};
+      let serverUrl = `http://${PLUGIN_URL}/register-message`;
+      return post({
+        url: serverUrl,
+        body: JSON.stringify(data)
+      }).then(args => {
+        if(args[0].statusCode != 200)
+          throw new Error();
+        return args[1];
+      }).catch(error => {
+        NylasEnv.showErrorDialog("There was a problem contacting the Open Tracking server! This message will not have open tracking :(");
+        Promise.reject(error);
+      });
+    }
+  });
 }
 
 class OpenTrackingComposerExtension extends ComposerExtension {
