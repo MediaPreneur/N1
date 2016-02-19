@@ -14,11 +14,6 @@ export default class OpenTrackingButton extends React.Component {
   constructor(props) {
     super(props);
     this.state = {enabled: false};
-    this.setStateFromDraftId(props.draftClientId);
-  }
-
-  componentWillReceiveProps(newProps) {
-    this.setStateFromDraftId(newProps.draftClientId);
   }
 
   componentDidMount() {
@@ -35,13 +30,6 @@ export default class OpenTrackingButton extends React.Component {
     const metadata = draft.metadataForPluginId(PLUGIN_ID);
     this.setState({enabled: metadata ? metadata.tracked : false});
   };
-
-  setStateFromDraftId(draftClientId) {
-    if(draftClientId)
-      DraftStore.sessionForClientId(draftClientId).then(session => {
-        this.setStateFromDraft(session.draft());
-      });
-  }
 
   _onClick=()=> {
     const currentlyEnabled = this.state.enabled;

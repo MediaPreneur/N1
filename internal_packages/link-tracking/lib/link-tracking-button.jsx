@@ -14,16 +14,11 @@ export default class LinkTrackingButton extends React.Component {
   constructor(props) {
     super(props);
     this.state = {enabled: false};
-    this.setStateFromDraftId(props.draftClientId);
   }
 
   componentDidMount() {
     const query = DatabaseStore.findBy(Message, {clientId: this.props.draftClientId});
     this._subscription = Rx.Observable.fromQuery(query).subscribe(this.setStateFromDraft)
-  }
-
-  componentWillReceiveProps(newProps) {
-    this.setStateFromDraftId(newProps.draftClientId);
   }
 
   componentWillUnmount() {
@@ -35,14 +30,6 @@ export default class LinkTrackingButton extends React.Component {
     const metadata = draft.metadataForPluginId(PLUGIN_ID);
     this.setState({enabled: metadata ? metadata.tracked : false});
   };
-
-  setStateFromDraftId(draftClientId) {
-    if (draftClientId) {
-      DraftStore.sessionForClientId(draftClientId).then(session => {
-        this.setStateFromDraft(session.draft());
-      });
-    }
-  }
 
   _onClick=()=> {
     const currentlyEnabled = this.state.enabled;
