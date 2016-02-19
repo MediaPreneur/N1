@@ -19,17 +19,9 @@ function afterDraftSend({draftClientId}) {
   DatabaseStore.findBy(Message, {clientId: draftClientId}).then((message) => {
     // grab message metadata, if any
     const metadata = message.metadataForPluginId(PLUGIN_ID);
-
     // get the uid from the metadata, if present
     if (metadata) {
       const uid = metadata.uid;
-
-      // update metadata against the message
-      for (const link of metadata.links) {
-        link.click_count = 0;
-        link.click_data = [];
-      }
-      Actions.setMetadata(message, PLUGIN_ID, metadata);
 
       // post the uid and message id pair to the plugin server
       const data = {uid: uid, message_id: message.id};

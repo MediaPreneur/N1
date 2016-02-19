@@ -29,7 +29,7 @@ export default class LinkTrackingComposerExtension extends ComposerExtension {
       draftBody.unquoted = draftBody.unquoted.replace(LINK_REGEX, (match, prefix, url, suffix) => {
         const encoded = encodeURIComponent(url);
         const redirectUrl = `http://${PLUGIN_URL}/${draft.accountId}/${messageUid}/${links.length}?redirect=${encoded}`;
-        links.push({url: url});
+        links.push({url: url, click_count: 0, click_data: []});
         return prefix + redirectUrl + suffix;
       });
 
