@@ -4,11 +4,10 @@ import plugin from '../package.json'
 const PLUGIN_ID = plugin.appId;
 
 export default class LinkTrackingButton extends React.Component {
-
   static displayName = 'LinkTrackingButton';
 
   static propTypes = {
-    draftClientId: React.PropTypes.string.isRequired
+    draftClientId: React.PropTypes.string.isRequired,
   };
 
   constructor(props) {
@@ -45,11 +44,16 @@ export default class LinkTrackingButton extends React.Component {
   };
 
   render() {
-    return (<button className={`btn btn-toolbar ${this.state.enabled ? "btn-action" : ""}`}
-                   onClick={this._onClick} title="Link Tracking">
-      <RetinaImg url="nylas://link-tracking/assets/linktracking-icon@2x.png"
-                 mode={RetinaImg.Mode.ContentIsMask} />
-    </button>)
+    return (
+      <button
+        title="Link Tracking"
+        className={`btn btn-toolbar ${this.state.enabled ? "btn-action" : ""}`}
+        onClick={this._onClick}>
+        <RetinaImg
+          url="nylas://link-tracking/assets/linktracking-icon@2x.png"
+          mode={RetinaImg.Mode.ContentIsMask} />
+      </button>
+    )
   }
 }
 

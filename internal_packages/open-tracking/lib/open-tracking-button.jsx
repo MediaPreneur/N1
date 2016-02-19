@@ -1,4 +1,4 @@
-import {Utils, DraftStore, React, Actions, NylasAPI, DatabaseStore, Message, Rx} from 'nylas-exports'
+import {DraftStore, React, Actions, NylasAPI, DatabaseStore, Message, Rx} from 'nylas-exports'
 import {RetinaImg} from 'nylas-component-kit'
 import plugin from '../package.json'
 const PLUGIN_ID = plugin.appId;
@@ -8,7 +8,7 @@ export default class OpenTrackingButton extends React.Component {
   static displayName = 'OpenTrackingButton';
 
   static propTypes = {
-    draftClientId: React.PropTypes.string.isRequired
+    draftClientId: React.PropTypes.string.isRequired,
   };
 
   constructor(props) {
@@ -25,7 +25,7 @@ export default class OpenTrackingButton extends React.Component {
     this._subscription.dispose();
   }
 
-  setStateFromDraft =(draft)=> {
+  setStateFromDraft = (draft)=> {
     if (!draft) return;
     const metadata = draft.metadataForPluginId(PLUGIN_ID);
     this.setState({enabled: metadata ? metadata.tracked : false});

@@ -2,11 +2,10 @@ import {React} from 'nylas-exports'
 import plugin from '../package.json'
 
 export default class LinkTrackingPanel extends React.Component {
-
   static displayName = 'LinkTrackingPanel';
 
   static propTypes = {
-    message: React.PropTypes.object.isRequired
+    message: React.PropTypes.object.isRequired,
   };
 
   constructor(props) {

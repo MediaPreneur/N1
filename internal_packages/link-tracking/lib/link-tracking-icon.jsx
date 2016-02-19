@@ -9,7 +9,7 @@ export default class LinkTrackingIcon extends React.Component {
   static displayName = 'LinkTrackingIcon';
 
   static propTypes = {
-    thread: React.PropTypes.object.isRequired
+    thread: React.PropTypes.object.isRequired,
   };
 
   constructor(props) {
@@ -29,7 +29,7 @@ export default class LinkTrackingIcon extends React.Component {
       // If there's metadata, return the total number of link clicks in the most recent metadata
       const mostRecentMetadata = metadataObjs.pop();
       return {
-        clicks: sum(mostRecentMetadata.links || [], link => link.click_count || 0)
+        clicks: sum(mostRecentMetadata.links || [], link => link.click_count || 0),
       };
     }
     return {clicks: null};

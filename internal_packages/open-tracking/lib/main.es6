@@ -31,7 +31,7 @@ function afterDraftSend({draftClientId}) {
       const serverUrl = `http://${PLUGIN_URL}/register-message`;
       return post({
         url: serverUrl,
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       }).then(([response, responseBody]) => {
         if (response.statusCode !== 200) {
           throw new Error();
