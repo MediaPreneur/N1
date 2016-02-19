@@ -25,9 +25,9 @@ function afterDraftSend({draftClientId}) {
       const uid = metadata.uid;
 
       // update metadata against the message
-      for (const linkId of Object.keys(metadata.links)) {
-        metadata.links[linkId].click_count = 0;
-        metadata.links[linkId].click_data = [];
+      for (const link of metadata.links) {
+        link.click_count = 0;
+        link.click_data = [];
       }
       Actions.setMetadata(message, PLUGIN_ID, metadata);
 

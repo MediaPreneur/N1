@@ -1,10 +1,13 @@
-import {Utils, React} from 'nylas-exports'
-import {RetinaImg} from 'nylas-component-kit'
+import {React} from 'nylas-exports'
 import plugin from '../package.json'
 
 export default class LinkTrackingPanel extends React.Component {
 
   static displayName = 'LinkTrackingPanel';
+
+  static propTypes = {
+    message: React.PropTypes.object.isRequired
+  };
 
   constructor(props) {
     super(props);
@@ -15,39 +18,31 @@ export default class LinkTrackingPanel extends React.Component {
     this.setState(this._getStateFromMessage(newProps.message));
   }
 
-  _getStateFromMessage(message){
-    let metadata = message.metadataForPluginId(plugin.appId);
-    if(metadata)
-      return {links: Object.keys(metadata.links).map(k=>metadata.links[k])};
-    return {};
-  };
+  _getStateFromMessage(message) {
+    const metadata = message.metadataForPluginId(plugin.appId);
+    return metadata ? {links: metadata.links} : {};
+  }
+
+  _renderContents() {
+    return this.state.links.map(link => {
+      return (<tr className="link-info">
+        <td className="link-url">{link.url}</td>
+        <td className="link-count">{link.click_count + " clicks"}</td>
+      </tr>)
+    })
+  }
 
   render() {
-    if(this.state.links)
-      return <div className="link-tracking-panel">
+    if (this.state.links) {
+      return (<div className="link-tracking-panel">
         <h4>Link Tracking Enabled</h4>
         <table>
           <tbody>
             {this._renderContents()}
           </tbody>
         </table>
-      </div>;
-    else
-      return <div></div>;
+      </div>);
+    }
+    return <div></div>;
   }
-
-  /*
-  <thead><tr>
-   <th>Link</th><th>Click count</th>
-  </tr></thead>
-   */
-
-  _renderContents() {
-    return this.state.links.map((link)=>{
-      return <tr className="link-info">
-        <td className="link-url">{link.url}</td>
-        <td className="link-count">{link.click_count+" clicks"}</td>
-      </tr>
-    })
-  };
 }

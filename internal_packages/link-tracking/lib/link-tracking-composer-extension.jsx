@@ -22,16 +22,14 @@ export default class LinkTrackingComposerExtension extends ComposerExtension {
     const metadata = draft.metadataForPluginId(PLUGIN_ID);
     if (metadata) {
       const draftBody = new DraftBody(draft);
-      const links = {};
+      const links = [];
       const messageUid = uuid.v4().replace(/-/g, "");
 
       // loop through all <a href> elements, replace with redirect links and save mappings
-      let linkId = 0;
       draftBody.unquoted = draftBody.unquoted.replace(LINK_REGEX, (match, prefix, url, suffix) => {
         const encoded = encodeURIComponent(url);
-        const redirectUrl = `http://${PLUGIN_URL}/${draft.accountId}/${messageUid}/${linkId}?redirect=${encoded}`;
-        links[linkId] = {url: url};
-        linkId++;
+        const redirectUrl = `http://${PLUGIN_URL}/${draft.accountId}/${messageUid}/${links.length}?redirect=${encoded}`;
+        links.push({url: url});
         return prefix + redirectUrl + suffix;
       });
 
