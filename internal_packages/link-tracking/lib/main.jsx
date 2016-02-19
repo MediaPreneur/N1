@@ -1,6 +1,6 @@
-import {ComponentRegistry, DatabaseStore, Thread, Message, ExtensionRegistry, ComposerExtension, React, Actions, QuotedHTMLTransformer} from 'nylas-exports';
+import {ComponentRegistry, DatabaseStore, Message, ExtensionRegistry, ComposerExtension, Actions, QuotedHTMLTransformer} from 'nylas-exports';
 import LinkTrackingButton from './link-tracking-button';
-import LinkTrackingIcon from './link-tracking-message-icon';
+import LinkTrackingIcon from './link-tracking-icon';
 import LinkTrackingPanel from './link-tracking-panel';
 import plugin from '../package.json'
 
@@ -8,7 +8,8 @@ import request from 'request';
 import uuid from 'node-uuid';
 const post = Promise.promisify(request.post, {multiArgs: true});
 const PLUGIN_ID = plugin.appId;
-const PLUGIN_URL="n1-link-tracking.herokuapp.com";
+const PLUGIN_URL = "n1-link-tracking.herokuapp.com";
+const LINK_REGEX = (/(<a\s.*?href\s*?=\s*?")([^"]*)("[^>]*>)|(<a\s.*?href\s*?=\s*?')([^']*)('[^>]*>)/g);
 
 class DraftBody {
   constructor(draft) {this._body = draft.body}
@@ -18,35 +19,36 @@ class DraftBody {
 }
 
 function afterDraftSend({draftClientId}) {
-  //only run this handler in the main window
-  if(!NylasEnv.isMainWindow()) return;
+  // only run this handler in the main window
+  if (!NylasEnv.isMainWindow()) return;
 
-  //query for the message
+  // query for the message
   DatabaseStore.findBy(Message, {clientId: draftClientId}).then((message) => {
-    //grab message metadata, if any
+    // grab message metadata, if any
     const metadata = message.metadataForPluginId(PLUGIN_ID);
 
-    //get the uid from the metadata, if present
-    if(metadata){
-      let uid = metadata.uid;
+    // get the uid from the metadata, if present
+    if (metadata) {
+      const uid = metadata.uid;
 
-      //update metadata against the message
-      for(const linkId of Object.keys(metadata.links)) {
+      // update metadata against the message
+      for (const linkId of Object.keys(metadata.links)) {
         metadata.links[linkId].click_count = 0;
         metadata.links[linkId].click_data = [];
       }
       Actions.setMetadata(message, PLUGIN_ID, metadata);
 
-      //post the uid and message id pair to the plugin server
-      let data = {uid: uid, message_id:message.id};
-      let serverUrl = `http://${PLUGIN_URL}/register-message`;
+      // post the uid and message id pair to the plugin server
+      const data = {uid: uid, message_id: message.id};
+      const serverUrl = `http://${PLUGIN_URL}/register-message`;
       return post({
         url: serverUrl,
         body: JSON.stringify(data)
-      }).then(args => {
-        if(args[0].statusCode != 200)
+      }).then( ([response, responseBody]) => {
+        if (response.statusCode !== 200) {
           throw new Error();
-        return args[1];
+        }
+        return responseBody;
       }).catch(error => {
         NylasEnv.showErrorDialog("There was a problem contacting the Link Tracking server! This message will not have link tracking");
         Promise.reject(error);
@@ -59,29 +61,29 @@ class LinkTrackingComposerExtension extends ComposerExtension {
   static finalizeSessionBeforeSending({session}) {
     const draft = session.draft();
 
-    //grab message metadata, if any
+    // grab message metadata, if any
     const metadata = draft.metadataForPluginId(PLUGIN_ID);
-    if(metadata) {
-      let draftBody = new DraftBody(draft);
-      let links = {};
-      let message_uid = uuid.v4().replace(/-/g,"");
+    if (metadata) {
+      const draftBody = new DraftBody(draft);
+      const links = {};
+      const messageUid = uuid.v4().replace(/-/g, "");
 
-      //loop through all <a href> elements, replace with redirect links and save mappings
-      draftBody.unquoted = draftBody.unquoted.replace(/(<a .*?href=")(.*?)(".*?>)/g, (match, prefix, url, suffix, offset) => {
-        //generate a UID
-        let uid = uuid.v4().replace(/-/g,"");
-        let encoded = encodeURIComponent(url);
-        let redirectUrl = `http://${PLUGIN_URL}/${draft.accountId}/${message_uid}/${uid}?redirect=${encoded}`;
-        links[uid] = {url:url};
-        return prefix+redirectUrl+suffix;
+      // loop through all <a href> elements, replace with redirect links and save mappings
+      let linkId = 0;
+      draftBody.unquoted = draftBody.unquoted.replace(LINK_REGEX, (match, prefix, url, suffix) => {
+        const encoded = encodeURIComponent(url);
+        const redirectUrl = `http://${PLUGIN_URL}/${draft.accountId}/${messageUid}/${linkId}?redirect=${encoded}`;
+        links[linkId] = {url: url};
+        linkId++;
+        return prefix + redirectUrl + suffix;
       });
 
-      //save the draft
+      // save the draft
       session.changes.add({body: draftBody.body});
       session.changes.commit();
 
-      //save the link info to draft metadata
-      metadata.uid = message_uid;
+      // save the link info to draft metadata
+      metadata.uid = messageUid;
       metadata.links = links;
       Actions.setMetadata(draft, PLUGIN_ID, metadata);
     }

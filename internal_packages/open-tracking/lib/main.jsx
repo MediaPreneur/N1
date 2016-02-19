@@ -1,13 +1,13 @@
-import {ComponentRegistry, ExtensionRegistry, DatabaseStore, Message, Thread, ComposerExtension, React, Actions, QuotedHTMLTransformer} from 'nylas-exports';
+import {ComponentRegistry, ExtensionRegistry, DatabaseStore, Message, ComposerExtension, Actions, QuotedHTMLTransformer} from 'nylas-exports';
 import OpenTrackingButton from './open-tracking-button';
-import OpenTrackingIcon from './open-tracking-message-icon';
+import OpenTrackingIcon from './open-tracking-icon';
 import plugin from '../package.json'
 
 import request from 'request';
 import uuid from 'node-uuid';
 const post = Promise.promisify(request.post, {multiArgs: true});
 const PLUGIN_ID = plugin.appId;
-const PLUGIN_URL="n1-open-tracking.herokuapp.com";
+const PLUGIN_URL = "n1-open-tracking.herokuapp.com";
 
 class DraftBody {
   constructor(draft) {this._body = draft.body}
@@ -17,31 +17,32 @@ class DraftBody {
 }
 
 function afterDraftSend({draftClientId}) {
-  //only run this handler in the main window
-  if(!NylasEnv.isMainWindow()) return;
+  // only run this handler in the main window
+  if (!NylasEnv.isMainWindow()) return;
 
-  //query for the message
+  // query for the message
   DatabaseStore.findBy(Message, {clientId: draftClientId}).then((message) => {
-    //grab message metadata, if any
+    // grab message metadata, if any
     const metadata = message.metadataForPluginId(PLUGIN_ID);
 
-    //get the uid from the metadata, if present
-    if(metadata){
-      let uid = metadata.uid;
+    // get the uid from the metadata, if present
+    if (metadata) {
+      const uid = metadata.uid;
 
-      //set metadata against the message
+      // set metadata against the message
       Actions.setMetadata(message, PLUGIN_ID, {open_count: 0, open_data: []});
 
-      //post the uid and message id pair to the plugin server
-      let data = {uid: uid, message_id:message.id, thread_id:1};
-      let serverUrl = `http://${PLUGIN_URL}/register-message`;
+      // post the uid and message id pair to the plugin server
+      const data = {uid: uid, message_id: message.id, thread_id: 1};
+      const serverUrl = `http://${PLUGIN_URL}/register-message`;
       return post({
         url: serverUrl,
         body: JSON.stringify(data)
-      }).then(args => {
-        if(args[0].statusCode != 200)
+      }).then(([response, responseBody]) => {
+        if (response.statusCode !== 200) {
           throw new Error();
-        return args[1];
+        }
+        return responseBody;
       }).catch(error => {
         NylasEnv.showErrorDialog("There was a problem contacting the Open Tracking server! This message will not have open tracking :(");
         Promise.reject(error);
@@ -54,23 +55,23 @@ class OpenTrackingComposerExtension extends ComposerExtension {
   static finalizeSessionBeforeSending({session}) {
     const draft = session.draft();
 
-    //grab message metadata, if any
-    let metadata = draft.metadataForPluginId(PLUGIN_ID);
-    if(metadata) {
-      //generate a UID
-      let uid = uuid.v4().replace(/-/g,"");
+    // grab message metadata, if any
+    const metadata = draft.metadataForPluginId(PLUGIN_ID);
+    if (metadata) {
+      // generate a UID
+      const uid = uuid.v4().replace(/-/g, "");
 
-      //insert a tracking pixel <img> into the message
-      let serverUrl = `http://${PLUGIN_URL}/${draft.accountId}/${uid}`;
-      let img = `<img width="0" height="0" style="border:0; width:0; height:0;" src="${serverUrl}">`;
-      let draftBody = new DraftBody(draft);
-      draftBody.unquoted = draftBody.unquoted+"<br>"+img;
+      // insert a tracking pixel <img> into the message
+      const serverUrl = `http://${PLUGIN_URL}/${draft.accountId}/${uid}`;
+      const img = `<img width="0" height="0" style="border:0; width:0; height:0;" src="${serverUrl}">`;
+      const draftBody = new DraftBody(draft);
+      draftBody.unquoted = draftBody.unquoted + "<br>" + img;
 
-      //save the draft
+      // save the draft
       session.changes.add({body: draftBody.body});
       session.changes.commit();
 
-      //save the uid to draft metadata
+      // save the uid to draft metadata
       metadata.uid = uid;
       Actions.setMetadata(draft, PLUGIN_ID, metadata);
     }

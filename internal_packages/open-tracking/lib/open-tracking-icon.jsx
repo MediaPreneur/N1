@@ -1,10 +1,14 @@
-import {Utils, React} from 'nylas-exports'
+import {React} from 'nylas-exports'
 import {RetinaImg} from 'nylas-component-kit'
 import plugin from '../package.json'
 
 export default class OpenTrackingIcon extends React.Component {
 
   static displayName = 'OpenTrackingIcon';
+
+  static propTypes = {
+    thread: React.PropTypes.object.isRequired
+  };
 
   constructor(props) {
     super(props);
@@ -15,29 +19,34 @@ export default class OpenTrackingIcon extends React.Component {
     this.setState(this._getStateFromThread(newProps.thread));
   }
 
-  _getStateFromThread(thread){
-    let metadatas = thread.metadata.map(m=>m.metadataForPluginId(plugin.appId)).filter(m=>m);
-    return {opened: metadatas.length ? metadatas.every(m=>m.open_count>0) : null};
-  };
-
-  render() {
-    return <div className="open-tracking-icon">
-      {this._renderIcon()}
-    </div>
+  _getStateFromThread(thread) {
+    const messages = thread.metadata;
+    const metadataObjs = messages.map(msg => msg.metadataForPluginId(plugin.appId)).filter(meta => meta);
+    return {opened: metadataObjs.length ? metadataObjs.every(m => m.open_count > 0) : null};
   }
 
   _renderIcon = () => {
-    openedIcon = <RetinaImg
+    if (this.state.opened == null) {
+      return "";
+    }
+    else if (this.state.opened) {
+      return (<RetinaImg
         url="nylas://open-tracking/assets/envelope-open-icon@2x.png"
         mode={RetinaImg.Mode.ContentIsMask}
-      />;
-    unopenedIcon = <RetinaImg
+        />);
+    }
+    else {
+      return (<RetinaImg
         className="unopened"
         url="nylas://open-tracking/assets/envelope-closed-icon@2x.png"
         mode={RetinaImg.Mode.ContentIsMask}
-      />;
-    //"●" : "◌"
-    return this.state.opened==null ? "" : (this.state.opened ? openedIcon : unopenedIcon);
+        />);
+    }
   };
 
+  render() {
+    return (<div className="open-tracking-icon">
+      {this._renderIcon()}
+    </div>)
+  }
 }
