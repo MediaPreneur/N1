@@ -9,7 +9,7 @@ const toolbarButton = (
     className="btn btn-toolbar btn-snooze"
     title="Snooze">
     <RetinaImg
-      url="nylas://thread-snooze/assets/ic-toolbar-native-snooze@2x.png"
+      name="toolbar-snooze.png"
       mode={RetinaImg.Mode.ContentIsMask} />
   </button>
 )
@@ -28,7 +28,12 @@ export class BulkThreadSnooze extends Component {
   };
 
   render() {
-    return <SnoozePopover buttonComponent={toolbarButton} threads={this.props.items} />;
+    return (
+      <SnoozePopover
+        direction="down"
+        buttonComponent={toolbarButton}
+        threads={this.props.items} />
+    );
   }
 }
 
@@ -40,7 +45,20 @@ export class ToolbarSnooze extends Component {
   };
 
   render() {
-    return <SnoozePopover buttonComponent={toolbarButton} threads={[this.props.thread]} />;
+    const pointerStyle = {
+      right: 38,
+      display: 'block',
+    };
+    const popoverStyle = {
+      transform: 'translate(0, 15px)',
+    }
+    return (
+      <SnoozePopover
+        pointerStyle={pointerStyle}
+        popoverStyle={popoverStyle}
+        buttonComponent={toolbarButton}
+        threads={[this.props.thread]} />
+    );
   }
 }
 
