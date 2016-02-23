@@ -22,6 +22,8 @@ FocusContainer = require './focus-container'
 EmptyState = require './empty-state'
 ThreadListContextMenu = require './thread-list-context-menu'
 
+SnoozeContent = require '../../thread-snooze/lib/snooze-content'
+
 
 class ThreadList extends React.Component
   @displayName: 'ThreadList'
@@ -124,6 +126,16 @@ class ThreadList extends React.Component
           fromPerspective: FocusedPerspectiveStore.current()
         Actions.queueTasks(tasks)
         callback(true)
+
+    props.onSwipeLeftClass = 'swipe-snooze'
+    props.onSwipeLeft = (callback) =>
+      element = document.querySelector("[data-item-id=\"#{item.id}\"]")
+      rect = element.getBoundingClientRect()
+      Actions.openPopover(
+        <SnoozeContent threads={[item]} swipeCallback={callback}/>,
+        rect,
+        "right"
+      )
 
     props
 

@@ -21,35 +21,39 @@
   }
   .popover {
     overflow: hidden;
+  }
+}
 
-    .snooze-container {
-      color: @snooze-color;
-      background-color: @snooze-bg-color;
+.fixed-popover {
+  overflow: hidden;
+}
+
+.snooze-container {
+  color: @snooze-color;
+  background-color: @snooze-bg-color;
+  display: flex;
+  flex-direction: column;
+
+  .snooze-row {
+    display: flex;
+
+    .snooze-item {
       display: flex;
       flex-direction: column;
+      align-items: center;
 
-      .snooze-row {
-        display: flex;
+      padding: 15px 0;
+      cursor: default;
+      width: 105px;
+      line-height: initial;
+      text-align: initial;
 
-        .snooze-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-
-          padding: 15px 0;
-          cursor: default;
-          width: 105px;
-          line-height: initial;
-          text-align: initial;
-
-          &+.snooze-item {
-            border-left: 1px solid @border-color-divider;
-          }
-        }
-        &+.snooze-row {
-          border-top: 1px solid @border-color-divider;
-        }
+      &+.snooze-item {
+        border-left: 1px solid @border-color-divider;
       }
+    }
+    &+.snooze-row {
+      border-top: 1px solid @border-color-divider;
     }
   }
 }

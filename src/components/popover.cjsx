@@ -160,7 +160,7 @@ class Popover extends React.Component
           'top': -10,
         pointerStyle = _.extend pointerStyle,
           'transform': 'translateX(-50%)'
-          'bottom': 46
+          'bottom': 48
 
       else if @props.direction is 'down'
         popoverStyle = _.extend popoverStyle,
