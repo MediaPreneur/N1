@@ -27,6 +27,8 @@ export class BulkThreadSnooze extends Component {
     items: PropTypes.array,
   };
 
+  static containerRequired = false;
+
   render() {
     return (
       <SnoozePopover
@@ -44,9 +46,11 @@ export class ToolbarSnooze extends Component {
     thread: PropTypes.object,
   };
 
+  static containerRequired = false;
+
   render() {
     const pointerStyle = {
-      right: 38,
+      right: 18,
       display: 'block',
     };
     const popoverStyle = {
@@ -68,6 +72,8 @@ export class QuickActionSnooze extends Component {
   static propTypes = {
     thread: PropTypes.object,
   };
+
+  static containerRequired = false;
 
   render() {
     return <SnoozePopover buttonComponent={quickActionButton} threads={[this.props.thread]} />;

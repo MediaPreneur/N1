@@ -167,7 +167,7 @@ class Popover extends React.Component
           'transform': 'translate(-50%, 15px)'
           'top': '100%'
         pointerStyle = _.extend pointerStyle,
-          'transform': 'translateX(-25%) rotateX(180deg)'
+          'transform': 'rotateX(180deg)'
           'top': 71
           'left':-12
 
