@@ -10,17 +10,19 @@ cached_engine = None
 
 
 def new_engine(database="quickschedule"):
-    db_url = os.environ['CLEARDB_DATABASE_URL']
-    if db_url:
+    if db_url := os.environ['CLEARDB_DATABASE_URL']:
         uri = 'mysql+pymysql'+db_url[5:].split('?')[0]
     else:
         uri_template = ("mysql+pymysql://{username}:{password}@{host}:"
                         "{port}/{database}")
-        uri = uri_template.format(username="root",
-                                  password="root",
-                                  host="localhost",
-                                  port=3307,
-                                  database=database if database else '')
+        uri = uri_template.format(
+            username="root",
+            password="root",
+            host="localhost",
+            port=3307,
+            database=database or '',
+        )
+
     return create_engine(uri,
                          isolation_level='READ COMMITTED',
                          echo=False,
@@ -29,8 +31,7 @@ def new_engine(database="quickschedule"):
 
 def new_session(engine, versioned=True):
     """Returns a session bound to the given engine."""
-    session = Session(bind=engine, autoflush=True, autocommit=False)
-    return session
+    return Session(bind=engine, autoflush=True, autocommit=False)
 
 
 @contextmanager

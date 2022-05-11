@@ -37,7 +37,7 @@ def register_events():
             for tm in data['times']
         ]
         if any(n is not None for n in conflicts):
-            raise 'An event key conflicts with an existing key: %s' % conflicts
+            raise f'An event key conflicts with an existing key: {conflicts}'
         times = [_make_event_time(d) for d in data['times']]
         attendees = [_make_attendee(d) for d in data['attendees']]
 
@@ -62,13 +62,15 @@ def load_event(key):
         except NoResultFound:
             return render_template("bad_event_link.html")
         event = etime.event
-        times = []
-        for t in event.times:
-            times.append({
+        times = [
+            {
                 "start": timestamp(t.start),
                 "end": timestamp(t.end),
-                "key": t.key
-            })
+                "key": t.key,
+            }
+            for t in event.times
+        ]
+
         return render_template("show_event.html",
                                event=event,
                                selected_key=key,
@@ -122,7 +124,7 @@ def _create_email(event, etime):
 
     msg.headers['From'] = "scheduler@nylas.com"
     msg.headers['Reply-To'] = sender
-    msg.headers['Subject'] = "Invitation: {}".format(event.title)
+    msg.headers['Subject'] = f"Invitation: {event.title}"
     msg.headers['To'] = ", ".join([a.email for a in event.attendees])
 
     return msg
@@ -160,13 +162,13 @@ def _make_ics(event, etime):
     )
     evt.add('priority', 5)
 
-    organizer = vCalAddress('MAILTO:{}'.format(event.organizer.email))
+    organizer = vCalAddress(f'MAILTO:{event.organizer.email}')
     organizer.params['cn'] = vText(event.organizer.name)
     organizer.params['role'] = vText('CHAIR')
     evt['organizer'] = organizer
 
     for attendee in event.attendees:
-        atnd = vCalAddress('MAILTO:{}'.format(attendee.email))
+        atnd = vCalAddress(f'MAILTO:{attendee.email}')
         atnd.params['cn'] = vText(attendee.name)
         atnd.params['ROLE'] = vText('REQ-PARTICIPANT')
         evt.add('attendee', atnd, encode=0)
